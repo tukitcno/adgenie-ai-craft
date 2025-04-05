@@ -28,19 +28,43 @@ export async function saveAdCampaign(campaign: Omit<AdCampaign, 'id' | 'created_
 }
 
 export async function getAdCampaigns(userId: string) {
-  return supabase
+  const { data, error } = await supabase
     .from('ad_campaigns')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
+    
+  if (error) throw error;
+  
+  // Type assertion to ensure platform is one of the expected values
+  return {
+    data: data?.map(campaign => ({
+      ...campaign,
+      platform: campaign.platform as "google" | "meta" | "tiktok",
+      ad_content: campaign.ad_content as AdContent
+    })) as AdCampaign[],
+    error
+  };
 }
 
 export async function getAdCampaignById(id: string) {
-  return supabase
+  const { data, error } = await supabase
     .from('ad_campaigns')
     .select('*')
     .eq('id', id)
     .single();
+    
+  if (error) return { data: null, error };
+  
+  // Type assertion for the single campaign
+  return {
+    data: data ? {
+      ...data,
+      platform: data.platform as "google" | "meta" | "tiktok",
+      ad_content: data.ad_content as AdContent
+    } as AdCampaign : null,
+    error
+  };
 }
 
 export async function uploadProductImage(file: File, userId: string) {

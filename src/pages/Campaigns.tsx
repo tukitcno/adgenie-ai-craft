@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { useAuth } from "@/context/AuthContext";
-import { getAdCampaigns, AdCampaign, getImageUrl } from "@/services/adService";
+import { getAdCampaigns, AdCampaign } from "@/services/adService";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
