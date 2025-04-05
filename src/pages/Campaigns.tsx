@@ -49,15 +49,6 @@ export default function Campaigns() {
     if (!campaign.ad_content) return 'No headline';
     
     const adContent = campaign.ad_content;
-    if (typeof adContent === 'string') {
-      try {
-        const parsed = JSON.parse(adContent);
-        return parsed.headlines?.[0] || 'No headline';
-      } catch (e) {
-        return 'Invalid headline data';
-      }
-    }
-    
     return adContent.headlines?.[0] || 'No headline';
   };
 
