@@ -89,7 +89,9 @@ export default function Campaigns() {
                       <TableCell>{formatDate(campaign.created_at || '')}</TableCell>
                       <TableCell className="capitalize">{campaign.platform}</TableCell>
                       <TableCell className="max-w-xs truncate">
-                        {campaign.ad_content.headline}
+                        {campaign.ad_content.headlines && campaign.ad_content.headlines.length > 0 
+                          ? campaign.ad_content.headlines[0] 
+                          : 'No headline'}
                       </TableCell>
                       <TableCell>
                         <Link to={`/campaign/${campaign.id}`}>
