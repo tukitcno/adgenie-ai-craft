@@ -1,41 +1,81 @@
 
-import { useState } from "react";
-import { Header } from "@/components/Header";
-import { ImageUpload } from "@/components/ImageUpload";
-import { PlatformSelector } from "@/components/PlatformSelector";
-import { AdGenerator, AdContent } from "@/components/AdGenerator";
-import { AdPreview } from "@/components/AdPreview";
-import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { useState } from "react"
+import { Header } from "@/components/Header"
+import { ImageUpload } from "@/components/ImageUpload"
+import { PlatformSelector } from "@/components/PlatformSelector"
+import { AdGenerator, AdContent } from "@/components/AdGenerator"
+import { AdPreview } from "@/components/AdPreview"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Sparkles, ArrowRight, Save } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
+import { saveAdCampaign, uploadProductImage } from "@/services/adService"
+import { useToast } from "@/hooks/use-toast"
 
 const Index = () => {
-  const [productImage, setProductImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedPlatform, setSelectedPlatform] = useState("google");
-  const [adContent, setAdContent] = useState<AdContent | null>(null);
-  const [step, setStep] = useState(1);
+  const [productImage, setProductImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [selectedPlatform, setSelectedPlatform] = useState("google")
+  const [adContent, setAdContent] = useState<AdContent | null>(null)
+  const [step, setStep] = useState(1)
+  const [isSaving, setIsSaving] = useState(false)
+  const { user } = useAuth()
+  const { toast } = useToast()
 
   const handleImageUpload = (file: File) => {
-    setProductImage(file);
-    const reader = new FileReader();
+    setProductImage(file)
+    const reader = new FileReader()
     reader.onload = (e) => {
       if (typeof e.target?.result === 'string') {
-        setImagePreview(e.target.result);
+        setImagePreview(e.target.result)
       }
-    };
-    reader.readAsDataURL(file);
-    setStep(2);
-  };
+    }
+    reader.readAsDataURL(file)
+    setStep(2)
+  }
 
   const handleSelectPlatform = (platform: string) => {
-    setSelectedPlatform(platform);
-    setStep(3);
-  };
+    setSelectedPlatform(platform)
+    setStep(3)
+  }
 
   const handleAdGenerated = (content: AdContent) => {
-    setAdContent(content);
-    setStep(4);
-  };
+    setAdContent(content)
+    setStep(4)
+  }
+
+  const handleSaveCampaign = async () => {
+    if (!productImage || !adContent || !user) return
+    
+    setIsSaving(true)
+    
+    try {
+      // Upload image to Supabase storage
+      const imagePath = await uploadProductImage(productImage, user.id)
+      
+      // Save campaign data to database
+      await saveAdCampaign({
+        user_id: user.id,
+        platform: selectedPlatform as "google" | "meta" | "tiktok",
+        image_path: imagePath,
+        ad_content: adContent
+      })
+      
+      toast({
+        title: "Campaign saved",
+        description: "Your ad campaign has been saved successfully"
+      })
+    } catch (error) {
+      console.error("Error saving campaign:", error)
+      toast({
+        variant: "destructive",
+        title: "Save failed",
+        description: "There was an error saving your campaign"
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -109,7 +149,17 @@ const Index = () => {
             <div>
               {adContent && step === 4 ? (
                 <div className="animate-fade-in">
-                  <h3 className="font-semibold text-lg mb-3">4. Preview & Customize</h3>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-semibold text-lg">4. Preview & Save</h3>
+                    <Button 
+                      onClick={handleSaveCampaign}
+                      disabled={isSaving}
+                      className="flex items-center gap-2"
+                    >
+                      <Save className="h-4 w-4" />
+                      {isSaving ? "Saving..." : "Save Campaign"}
+                    </Button>
+                  </div>
                   <AdPreview 
                     adContent={adContent}
                     platform={selectedPlatform}
