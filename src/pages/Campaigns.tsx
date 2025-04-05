@@ -26,12 +26,12 @@ export default function Campaigns() {
         if (error) throw error;
         
         setCampaigns(data || []);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching campaigns:", error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load your campaigns"
+          description: "Failed to load your campaigns: " + error.message
         });
       } finally {
         setLoading(false);
@@ -43,6 +43,22 @@ export default function Campaigns() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const getFirstHeadline = (campaign: AdCampaign) => {
+    if (!campaign.ad_content) return 'No headline';
+    
+    const adContent = campaign.ad_content;
+    if (typeof adContent === 'string') {
+      try {
+        const parsed = JSON.parse(adContent);
+        return parsed.headlines?.[0] || 'No headline';
+      } catch (e) {
+        return 'Invalid headline data';
+      }
+    }
+    
+    return adContent.headlines?.[0] || 'No headline';
   };
 
   return (
@@ -89,9 +105,7 @@ export default function Campaigns() {
                       <TableCell>{formatDate(campaign.created_at || '')}</TableCell>
                       <TableCell className="capitalize">{campaign.platform}</TableCell>
                       <TableCell className="max-w-xs truncate">
-                        {campaign.ad_content.headlines && campaign.ad_content.headlines.length > 0 
-                          ? campaign.ad_content.headlines[0] 
-                          : 'No headline'}
+                        {getFirstHeadline(campaign)}
                       </TableCell>
                       <TableCell>
                         <Link to={`/campaign/${campaign.id}`}>
