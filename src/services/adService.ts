@@ -2,10 +2,11 @@
 import { supabase } from "@/lib/supabase"
 
 export type AdContent = {
-  headline: string
-  description: string
+  headlines: string[]
+  descriptions: string[]
   cta: string
   hashtags?: string[]
+  keywords?: string[]
 }
 
 export type AdCampaign = {
